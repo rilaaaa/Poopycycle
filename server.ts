@@ -38,10 +38,21 @@ function generateFallbackAnalysis(logs: {
 }) {
   const { poopLogs, mealLogs, symptomLogs, waterLogs, activityLogs } = logs;
 
+  if (!poopLogs || poopLogs.length === 0) {
+    return {
+      healthStatus: 'Belum Ada Data',
+      healthScore: 0,
+      predictedTimeRange: '--:--',
+      confidenceLevel: 0,
+      explanation: 'Silakan catat data pencernaan pertama Anda.',
+      insights: []
+    };
+  }
+
   // 1. Calculate Health Score
   // Base score 75. Modify based on stats.
   let score = 75;
-  let status: 'Sehat' | 'Kurang Sehat' | 'Konstipasi' | 'Diare' | 'Optimal' = 'Sehat';
+  let status: 'Sehat' | 'Kurang Sehat' | 'Konstipasi' | 'Diare' | 'Optimal' | 'Belum Ada Data' = 'Sehat';
 
   if (poopLogs.length > 0) {
     // Average Bristol Type
@@ -164,6 +175,18 @@ function generateFallbackAnalysis(logs: {
 app.post('/api/analyze', async (req, res) => {
   try {
     const { poopLogs = [], mealLogs = [], symptomLogs = [], waterLogs = [], activityLogs = [] } = req.body;
+
+    if (!poopLogs || poopLogs.length === 0) {
+      return res.json({
+        healthStatus: 'Belum Ada Data',
+        healthScore: 0,
+        predictedTimeRange: '--:--',
+        confidenceLevel: 0,
+        explanation: 'Silakan catat data pencernaan pertama Anda.',
+        insights: [],
+        isFallback: true
+      });
+    }
 
     const ai = getAiClient();
     if (!ai) {

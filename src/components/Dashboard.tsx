@@ -240,22 +240,30 @@ export default function Dashboard({
           <div className="space-y-2">
             <p className="text-[10px] uppercase font-bold tracking-widest text-teal-100">Status Pencernaan</p>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-6 w-6 text-emerald-200 fill-teal-600" />
+              {aiAnalysis.healthStatus === 'Belum Ada Data' ? (
+                <AlertCircle className="h-6 w-6 text-teal-200" />
+              ) : (
+                <CheckCircle2 className="h-6 w-6 text-emerald-200 fill-teal-600" />
+              )}
               <span className="text-2xl font-bold font-display">{aiAnalysis.healthStatus}</span>
             </div>
             <p className="text-xs text-teal-50 leading-relaxed max-w-[240px]">
-              {aiAnalysis.healthStatus === 'Sehat' || aiAnalysis.healthStatus === 'Optimal' 
-                ? 'Pola aktivitas & pencernaan Anda berada dalam kondisi prima!' 
-                : aiAnalysis.healthStatus === 'Konstipasi' 
-                  ? 'Feses keras terpantau. Tingkatkan serat & konsumsi air segera.' 
-                  : aiAnalysis.healthStatus === 'Diare' 
-                    ? 'Feses cair terdeteksi. Batasi makanan pedas & pastikan hidrasi.' 
-                    : 'Pencernaan terpantau sedikit melambat. Perhatikan pola makan.'}
+              {aiAnalysis.healthStatus === 'Belum Ada Data'
+                ? 'Catat buang air besar (BAB) pertama Anda untuk mengaktifkan skor kesehatan pencernaan.'
+                : aiAnalysis.healthStatus === 'Sehat' || aiAnalysis.healthStatus === 'Optimal' 
+                  ? 'Pola aktivitas & pencernaan Anda berada dalam kondisi prima!' 
+                  : aiAnalysis.healthStatus === 'Konstipasi' 
+                    ? 'Feses keras terpantau. Tingkatkan serat & konsumsi air segera.' 
+                    : aiAnalysis.healthStatus === 'Diare' 
+                      ? 'Feses cair terdeteksi. Batasi makanan pedas & pastikan hidrasi.' 
+                      : 'Pencernaan terpantau sedikit melambat. Perhatikan pola makan.'}
             </p>
           </div>
           <div className="bg-white/20 backdrop-blur-md rounded-2xl px-4 py-3 text-center border border-white/20">
             <p className="text-[9px] uppercase font-bold tracking-wider text-teal-100">Skor Gut</p>
-            <p className="text-3xl font-extrabold font-display leading-tight">{aiAnalysis.healthScore}</p>
+            <p className="text-3xl font-extrabold font-display leading-tight">
+              {aiAnalysis.healthStatus === 'Belum Ada Data' ? '--' : aiAnalysis.healthScore}
+            </p>
           </div>
         </div>
       </div>
@@ -297,7 +305,7 @@ export default function Dashboard({
             <button 
               id="refresh-ai-btn"
               onClick={(e) => { e.stopPropagation(); onRefreshAnalysis(); }}
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || aiAnalysis.healthStatus === 'Belum Ada Data'}
               className="p-1 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-slate-600 disabled:opacity-45 transition"
               title="Refresh analisis AI"
             >
@@ -306,12 +314,16 @@ export default function Dashboard({
           </div>
 
           <div className="space-y-1">
-            <p className="text-lg font-bold text-slate-800 font-display">{aiAnalysis.predictedTimeRange}</p>
+            <p className="text-lg font-bold text-slate-800 font-display">
+              {aiAnalysis.healthStatus === 'Belum Ada Data' ? '--:--' : aiAnalysis.predictedTimeRange}
+            </p>
             <span className="inline-block px-2 py-0.5 bg-violet-50 text-violet-700 text-[10px] font-bold rounded-md">
-              {aiAnalysis.confidenceLevel}% yakin
+              {aiAnalysis.healthStatus === 'Belum Ada Data' ? '0% yakin' : `${aiAnalysis.confidenceLevel}% yakin`}
             </span>
             <p className="text-[11px] text-slate-400 mt-2 line-clamp-2" title={aiAnalysis.explanation}>
-              {aiAnalysis.explanation}
+              {aiAnalysis.healthStatus === 'Belum Ada Data'
+                ? 'Mulai isi log BAB pertama Anda untuk mengaktifkan prediksi bertenaga AI.'
+                : aiAnalysis.explanation}
             </p>
           </div>
         </div>

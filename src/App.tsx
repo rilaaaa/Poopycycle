@@ -80,16 +80,12 @@ export default function App() {
   // AI Analysis Cache State
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState({
-    healthStatus: 'Sehat',
-    healthScore: 78,
-    predictedTimeRange: '06:30 – 08:00',
-    confidenceLevel: 82,
-    explanation: 'Prediksi berdasarkan waktu rata-rata BAB Anda di pagi hari.',
-    insights: [
-      'Anda lebih sering BAB 8–12 jam setelah makan malam.',
-      'Saat konsumsi serat tinggi, pola BAB Anda lebih teratur.',
-      'Konsumsi air hari ini masih di bawah target. Minum 3 gelas lagi.'
-    ],
+    healthStatus: 'Belum Ada Data',
+    healthScore: 0,
+    predictedTimeRange: '--:--',
+    confidenceLevel: 0,
+    explanation: 'Silakan catat data pencernaan pertama Anda.',
+    insights: [],
     isFallback: true
   });
 
@@ -183,8 +179,6 @@ export default function App() {
     waters: WaterLog[];
     activities: ActivityLog[];
   }) => {
-    setIsAnalyzing(true);
-    
     // Fallback to state if arguments are not provided
     const data = currentData || {
       poops: poopLogs,
@@ -194,6 +188,21 @@ export default function App() {
       activities: activityLogs
     };
 
+    if (!data.poops || data.poops.length === 0) {
+      setAiAnalysis({
+        healthStatus: 'Belum Ada Data',
+        healthScore: 0,
+        predictedTimeRange: '--:--',
+        confidenceLevel: 0,
+        explanation: 'Silakan catat data pencernaan pertama Anda.',
+        insights: [],
+        isFallback: true
+      });
+      setIsAnalyzing(false);
+      return;
+    }
+
+    setIsAnalyzing(true);
     try {
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -572,11 +581,11 @@ export default function App() {
 
     // Clear AI analysis
     setAiAnalysis({
-      healthStatus: 'Sehat',
-      healthScore: 75,
+      healthStatus: 'Belum Ada Data',
+      healthScore: 0,
       predictedTimeRange: '--:--',
-      confidenceLevel: 50,
-      explanation: 'Isi data log pertama Anda untuk memulai prediksi otomatis bertenaga AI.',
+      confidenceLevel: 0,
+      explanation: 'Silakan catat data pencernaan pertama Anda.',
       insights: [],
       isFallback: true
     });
