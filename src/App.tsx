@@ -31,6 +31,8 @@ import {
   BowelDifficulty,
   ActivityType
 } from './types';
+import { Language, translations } from './lib/translations';
+import { motion, AnimatePresence } from 'motion/react';
 
 // Components
 import Auth from './components/Auth';
@@ -56,6 +58,46 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+
+  // Language & Theme State
+  const [lang, setLang] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem('poopcycle_lang');
+      return (saved === 'en' || saved === 'id') ? (saved as Language) : 'id';
+    } catch (e) {
+      return 'id';
+    }
+  });
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const saved = localStorage.getItem('poopcycle_theme');
+      return saved === 'dark' ? 'dark' : 'light';
+    } catch (e) {
+      return 'light';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('poopcycle_lang', lang);
+    } catch (e) {
+      console.warn('localStorage is not accessible:', e);
+    }
+  }, [lang]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('poopcycle_theme', theme);
+    } catch (e) {
+      console.warn('localStorage is not accessible:', e);
+    }
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   // App navigation state
   const [activeTab, setActiveTab] = useState<'home' | 'log' | 'calendar' | 'analytics' | 'account'>('home');
@@ -599,147 +641,170 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center font-sans transition-colors duration-200">
         <div className="h-12 w-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-xs text-slate-500 font-semibold mt-4">Memuat Data PoopCycle...</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-4">{translations[lang].loadingData}</p>
       </div>
     );
   }
 
   // Show login/registration screen if unauthenticated
   if (!currentUser || !userProfile) {
-    return <Auth onAuthSuccess={() => {}} />;
+    return <Auth onAuthSuccess={() => {}} lang={lang} setLang={setLang} theme={theme} setTheme={setTheme} />;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col relative font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col relative font-sans transition-colors duration-200">
       
       {/* Scrollable Container Body */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === 'home' && (
-          <Dashboard
-            displayName={userProfile.displayName}
-            poopLogs={poopLogs}
-            waterLogs={waterLogs}
-            activityLogs={activityLogs}
-            aiAnalysis={aiAnalysis}
-            isAnalyzing={isAnalyzing}
-            onRefreshAnalysis={() => requestAIAnalysis()}
-            onNavigateToLog={navigateToLogCenter}
-          />
-        )}
+      <div className="flex-1 overflow-y-auto pb-24">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="w-full"
+          >
+            {activeTab === 'home' && (
+              <Dashboard
+                displayName={userProfile.displayName}
+                poopLogs={poopLogs}
+                waterLogs={waterLogs}
+                activityLogs={activityLogs}
+                aiAnalysis={aiAnalysis}
+                isAnalyzing={isAnalyzing}
+                onRefreshAnalysis={() => requestAIAnalysis()}
+                onNavigateToLog={navigateToLogCenter}
+                lang={lang}
+                theme={theme}
+              />
+            )}
 
-        {activeTab === 'log' && (
-          <Logger
-            onAddPoopLog={handleAddPoopLog}
-            onAddMealLog={handleAddMealLog}
-            onAddSymptomLog={handleAddSymptomLog}
-            onAddWaterLog={handleAddWaterLog}
-            onAddActivityLog={handleAddActivityLog}
-            currentWaterCount={(() => {
-              const todayStr = new Date().toISOString().split('T')[0];
-              const wLog = waterLogs.find(w => w.logDate === todayStr);
-              return wLog ? wLog.glasses : 0;
-            })()}
-            currentWaterTarget={userProfile.dailyWaterGoal}
-            initialTab={loggerSubTab}
-          />
-        )}
+            {activeTab === 'log' && (
+              <Logger
+                onAddPoopLog={handleAddPoopLog}
+                onAddMealLog={handleAddMealLog}
+                onAddSymptomLog={handleAddSymptomLog}
+                onAddWaterLog={handleAddWaterLog}
+                onAddActivityLog={handleAddActivityLog}
+                currentWaterCount={(() => {
+                  const todayStr = new Date().toISOString().split('T')[0];
+                  const wLog = waterLogs.find(w => w.logDate === todayStr);
+                  return wLog ? wLog.glasses : 0;
+                })()}
+                currentWaterTarget={userProfile.dailyWaterGoal}
+                initialTab={loggerSubTab}
+                lang={lang}
+                theme={theme}
+              />
+            )}
 
-        {activeTab === 'calendar' && (
-          <CalendarView
-            poopLogs={poopLogs}
-            mealLogs={mealLogs}
-            symptomLogs={symptomLogs}
-            waterLogs={waterLogs}
-            activityLogs={activityLogs}
-            onDeleteLog={handleDeleteLog}
-          />
-        )}
+            {activeTab === 'calendar' && (
+              <CalendarView
+                poopLogs={poopLogs}
+                mealLogs={mealLogs}
+                symptomLogs={symptomLogs}
+                waterLogs={waterLogs}
+                activityLogs={activityLogs}
+                onDeleteLog={handleDeleteLog}
+                lang={lang}
+                theme={theme}
+              />
+            )}
 
-        {activeTab === 'analytics' && (
-          <Analytics
-            poopLogs={poopLogs}
-            mealLogs={mealLogs}
-            symptomLogs={symptomLogs}
-            waterLogs={waterLogs}
-          />
-        )}
+            {activeTab === 'analytics' && (
+              <Analytics
+                poopLogs={poopLogs}
+                mealLogs={mealLogs}
+                symptomLogs={symptomLogs}
+                waterLogs={waterLogs}
+                lang={lang}
+                theme={theme}
+              />
+            )}
 
-        {activeTab === 'account' && (
-          <Account
-            displayName={userProfile.displayName}
-            email={userProfile.email}
-            waterGoal={userProfile.dailyWaterGoal}
-            notificationsEnabled={userProfile.notificationsEnabled}
-            onUpdateProfile={handleUpdateProfile}
-            onUpdateWaterGoal={handleUpdateWaterGoal}
-            onToggleNotifications={handleToggleNotifications}
-            onSeedDatabase={handleSeedDatabase}
-            onClearDatabase={handleClearDatabase}
-          />
-        )}
+            {activeTab === 'account' && (
+              <Account
+                displayName={userProfile.displayName}
+                email={userProfile.email}
+                waterGoal={userProfile.dailyWaterGoal}
+                notificationsEnabled={userProfile.notificationsEnabled}
+                onUpdateProfile={handleUpdateProfile}
+                onUpdateWaterGoal={handleUpdateWaterGoal}
+                onToggleNotifications={handleToggleNotifications}
+                onSeedDatabase={handleSeedDatabase}
+                onClearDatabase={handleClearDatabase}
+                lang={lang}
+                setLang={setLang}
+                theme={theme}
+                setTheme={setTheme}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Floating Sparkles indicator when running active AI Analysis */}
       {isAnalyzing && (
         <div className="fixed top-4 right-4 bg-violet-600 text-white py-1.5 px-3 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1.5 z-50 animate-pulse">
           <Sparkles className="h-3 w-3 text-violet-200 animate-spin" />
-          Menganalisis Pola Usus...
+          {translations[lang].analyzingGut}
         </div>
       )}
 
       {/* Persistent Bottom Nav Bar (Styled precisely like mockup) */}
-      <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200/80 grid grid-cols-5 py-2.5 z-40 shadow-xl max-w-lg mx-auto rounded-t-2xl">
+      <div className="fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800/80 grid grid-cols-5 py-2.5 z-40 shadow-xl max-w-lg mx-auto rounded-t-2xl transition-colors duration-200">
         <button
           id="nav-tab-home"
           onClick={() => setActiveTab('home')}
-          className={`flex flex-col items-center gap-1 transition cursor-pointer ${activeTab === 'home' ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600'}`}
+          className={`flex flex-col items-center gap-1 transition cursor-pointer ${activeTab === 'home' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
         >
           <Home className="h-5 w-5" />
-          <span className="text-[9px] font-bold tracking-tight">Home</span>
+          <span className="text-[9px] font-bold tracking-tight">{translations[lang].tabHome}</span>
         </button>
 
         <button
           id="nav-tab-log"
           onClick={() => { setActiveTab('log'); setLoggerSubTab('poop'); }}
-          className={`flex flex-col items-center gap-1 transition cursor-pointer ${activeTab === 'log' ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600'}`}
+          className={`flex flex-col items-center gap-1 transition cursor-pointer ${activeTab === 'log' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
         >
           <PencilRuler className="h-5 w-5" />
-          <span className="text-[9px] font-bold tracking-tight">Log</span>
+          <span className="text-[9px] font-bold tracking-tight">{translations[lang].tabLog}</span>
         </button>
 
         <button
           id="nav-tab-calendar"
           onClick={() => setActiveTab('calendar')}
-          className={`flex flex-col items-center gap-1 transition cursor-pointer ${activeTab === 'calendar' ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600'}`}
+          className={`flex flex-col items-center gap-1 transition cursor-pointer ${activeTab === 'calendar' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
         >
           <Calendar className="h-5 w-5" />
-          <span className="text-[9px] font-bold tracking-tight">Kalender</span>
+          <span className="text-[9px] font-bold tracking-tight">{translations[lang].tabCalendar}</span>
         </button>
 
         <button
           id="nav-tab-analytics"
           onClick={() => setActiveTab('analytics')}
-          className={`flex flex-col items-center gap-1 transition cursor-pointer ${activeTab === 'analytics' ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600'}`}
+          className={`flex flex-col items-center gap-1 transition cursor-pointer ${activeTab === 'analytics' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
         >
           <LineChart className="h-5 w-5" />
-          <span className="text-[9px] font-bold tracking-tight">Analisis</span>
+          <span className="text-[9px] font-bold tracking-tight">{translations[lang].tabAnalytics}</span>
         </button>
 
         <button
           id="nav-tab-account"
           onClick={() => setActiveTab('account')}
-          className={`flex flex-col items-center gap-1 transition cursor-pointer ${activeTab === 'account' ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600'}`}
+          className={`flex flex-col items-center gap-1 transition cursor-pointer ${activeTab === 'account' ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
         >
           <Settings className="h-5 w-5" />
-          <span className="text-[9px] font-bold tracking-tight">Akun</span>
+          <span className="text-[9px] font-bold tracking-tight">{translations[lang].tabAccount}</span>
         </button>
       </div>
 
       {/* Elegant floating notification toast */}
       {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-sm bg-slate-900/95 text-white py-3 px-4 rounded-xl shadow-xl flex items-center gap-3 border border-slate-700/50 backdrop-blur-md animate-bounce">
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-sm bg-slate-900/95 dark:bg-slate-800/95 text-white py-3 px-4 rounded-xl shadow-xl flex items-center gap-3 border border-slate-700/50 dark:border-slate-700/80 backdrop-blur-md animate-bounce">
           <div className="h-6 w-6 rounded-full bg-teal-500 flex items-center justify-center text-white flex-shrink-0">
             <Check className="h-3.5 w-3.5" />
           </div>

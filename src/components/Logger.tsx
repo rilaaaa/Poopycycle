@@ -24,6 +24,7 @@ import {
   BowelDifficulty, 
   ActivityType 
 } from '../types';
+import { Language } from '../lib/translations';
 
 interface LoggerProps {
   onAddPoopLog: (data: { poopTime: string, bristolType: number, color: StoolColor, difficulty: BowelDifficulty, duration: number, notes?: string }) => Promise<void>;
@@ -34,6 +35,8 @@ interface LoggerProps {
   currentWaterCount: number;
   currentWaterTarget: number;
   initialTab?: 'poop' | 'meal' | 'symptom' | 'water' | 'activity';
+  lang: Language;
+  theme: 'light' | 'dark';
 }
 
 export default function Logger({
@@ -44,7 +47,9 @@ export default function Logger({
   onAddActivityLog,
   currentWaterCount,
   currentWaterTarget,
-  initialTab = 'poop'
+  initialTab = 'poop',
+  lang,
+  theme
 }: LoggerProps) {
   const [activeTab, setActiveTab] = useState<'poop' | 'meal' | 'symptom' | 'water' | 'activity'>(initialTab);
   const [saving, setSaving] = useState(false);

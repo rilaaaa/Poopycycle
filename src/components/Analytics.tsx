@@ -4,6 +4,7 @@
  */
 
 import { PoopLog, MealLog, SymptomLog, WaterLog } from '../types';
+import { Language } from '../lib/translations';
 import { 
   BarChart2, 
   AlertTriangle, 
@@ -19,13 +20,17 @@ interface AnalyticsProps {
   mealLogs: MealLog[];
   symptomLogs: SymptomLog[];
   waterLogs: WaterLog[];
+  lang: Language;
+  theme: 'light' | 'dark';
 }
 
 export default function Analytics({
   poopLogs,
   mealLogs,
   symptomLogs,
-  waterLogs
+  waterLogs,
+  lang,
+  theme
 }: AnalyticsProps) {
 
   // 1. Bristol scale distribution

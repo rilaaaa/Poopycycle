@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { PoopLog, WaterLog, ActivityLog } from '../types';
+import { Language } from '../lib/translations';
 import { 
   Bell, 
   User, 
@@ -20,7 +21,8 @@ import {
   BrainCircuit,
   Award,
   X,
-  Check
+  Check,
+  Leaf
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -40,6 +42,8 @@ interface DashboardProps {
   isAnalyzing: boolean;
   onRefreshAnalysis: () => void;
   onNavigateToLog: (category: 'poop' | 'meal' | 'symptom' | 'water' | 'activity') => void;
+  lang: Language;
+  theme: 'light' | 'dark';
 }
 
 export default function Dashboard({
@@ -50,7 +54,9 @@ export default function Dashboard({
   aiAnalysis,
   isAnalyzing,
   onRefreshAnalysis,
-  onNavigateToLog
+  onNavigateToLog,
+  lang,
+  theme
 }: DashboardProps) {
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -200,8 +206,20 @@ export default function Dashboard({
       {/* Top Banner & Profile Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="h-9 w-9 bg-teal-500 rounded-xl flex items-center justify-center text-white font-bold font-display shadow-md shadow-teal-100">
-            P
+          <div className="relative h-11 w-11 bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden group">
+            {/* Inner glow and orbit effects */}
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 via-emerald-400 to-teal-500 rounded-full blur-md opacity-35 group-hover:opacity-60 transition-opacity" />
+            
+            {/* Premium nested icon combination */}
+            <div className="relative flex items-center justify-center w-full h-full">
+              {/* Outer spinning cycle representing metabolism & cycle */}
+              <RotateCw className="absolute h-7 w-7 text-emerald-100/40 animate-[spin_10s_linear_infinite]" />
+              {/* Central hero Leaf representing fiber, gut health, and clean digestion */}
+              <Leaf className="h-4.5 w-4.5 text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.6)] fill-white/20 transform -rotate-12 group-hover:scale-110 transition-transform duration-300" />
+              {/* Sparkle for Smart/AI element */}
+              <Sparkles className="absolute h-2.5 w-2.5 text-amber-300 top-2 right-2 animate-pulse" />
+            </div>
           </div>
           <span className="text-xl font-bold text-slate-800 font-display tracking-tight">PoopCycle</span>
         </div>

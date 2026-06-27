@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { PoopLog, MealLog, SymptomLog, WaterLog, ActivityLog } from '../types';
+import { Language } from '../lib/translations';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -24,6 +25,8 @@ interface CalendarViewProps {
   waterLogs: WaterLog[];
   activityLogs: ActivityLog[];
   onDeleteLog: (collectionName: string, docId: string) => Promise<void>;
+  lang: Language;
+  theme: 'light' | 'dark';
 }
 
 export default function CalendarView({
@@ -32,7 +35,9 @@ export default function CalendarView({
   symptomLogs,
   waterLogs,
   activityLogs,
-  onDeleteLog
+  onDeleteLog,
+  lang,
+  theme
 }: CalendarViewProps) {
   // Navigation for month
   const [currentDate, setCurrentDate] = useState(new Date());
